@@ -4,6 +4,11 @@ title: About
 permalink: /about
 ---
 
-Hi, Write an awesome description about your blog here.  
-Feel free to make it a bit more interesting by adding a picture or two.  
-Only limit here is your creativity and imagination. Unleash them with full force.  
+Wojciech Gaweł
+Software Developer
+
+LinkedIn: [linkedin.com/in/wgawel/](https://www.linkedin.com/in/wojciechgawel))
+
+Github: [github.com/wgawel](https://github.com/wgawel)
+
+e-mail: wojtekgaw at gmail.com
