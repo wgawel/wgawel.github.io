@@ -7,7 +7,7 @@ permalink: /about
 Wojciech Gaweł
 Software Developer
 
-LinkedIn: [linkedin.com/in/wgawel/](https://www.linkedin.com/in/wojciechgawel))
+LinkedIn: [linkedin.com/in/wgawel](https://www.linkedin.com/in/wojciechgawel)
 
 Github: [github.com/wgawel](https://github.com/wgawel)
 
