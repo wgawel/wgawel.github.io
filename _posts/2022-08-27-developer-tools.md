@@ -1,13 +1,13 @@
 ---
 layout: post
 title: "(Small) Developer Tools"
-categories: [content, environment]
+categories: [tools, environment]
 ---
 
 There are times when I have to configure new work environments from scratch. These few points will allow me to do it faster and maybe inspire you.
 In this part, I focus on small tools.
 
-I omit a longer description of the tools here, others have already done so. Use the description on the home pages or use Google.
+I omit a longer description of the tools here, others have already done so.
 
 ### Tools
 
