@@ -10,6 +10,8 @@ And it happened cyclically. Very large project, lots of dependent modules. All t
 
 Solution: script to automatically remove unnecessary artifacts in the .m2 folder.
 
+Here is [my Github repository with the M2 Cleaner](https://github.com/wgawel/m2_cleaner).
+
 How it's working?
 
 0. Configure the script (project name and optional list of unnecessary artifacts).
@@ -22,3 +24,5 @@ How it's working?
 A small thing, but useful, and therefore became popular in the project I was working on.
 
 Note: Script written to run on Cmder in Windows (or other bash command line).
+
+[![Maven M2 Cleanser screenshot](/assets/image/screenshots/m2_cleaner.png)](/assets/image/screenshots/m2_cleaner.png){:.glightbox}
