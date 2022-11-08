@@ -39,4 +39,4 @@ Or, with livereload:
 
 Done! Your site will be available on http://127.0.0.1:4000/
 
-![Jekyll Windows Preview](/assets/image/screenshots/jekyll_windows_preview.png)
+[![Jekyll Windows Preview](/assets/image/screenshots/jekyll_windows_preview.png)](/assets/image/screenshots/jekyll_windows_preview.png)
