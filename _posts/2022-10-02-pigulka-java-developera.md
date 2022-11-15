@@ -4,14 +4,15 @@ title: "[PL] Źródła wiedzy Java Developera"
 categories: [Java]
 ---
 
-> Artykuł aktualizowany (ostatnio 9.11.2022)
+> Artykuł aktualizowany (ostatnio 15.11.2022)
 
 Materiałów sieci jest mnóstwo, tutaj wybrałem te, które osobiście uważam najbardziej merytoryczne i przydatne.
-Do części załączam własne notaki i streszczenia.
+Do części załączam własne notatki i streszczenia.
 
 ## Table of contents
 1. [Porty i adaptery aka Hexagonal architecture, CQRS](#hexagonal)
    * [Jakub Nabrdalik: Keep IT clean, or how to hide your shit](#keep_it_clean)
+   * [Mateusz Chrzonstowski: Moje rozumienie DDD na przykładzie bajki o 3 świnkach](#chrzonstowski_3pigs)
    * [(Udemy) Mateusz Chrzonstowski: Architektura aplikacji](#chrzonstowski_architektura)
 2. [JPA/Hibernate](#jpa_hibernate)
    * [Jakub Kubryński: JPA - beyond copy-paste](#jpa_beyond)
@@ -374,6 +375,440 @@ Podsumowanie:
    Klasy wewnętrzne - są dobre. Jako static wyjątki, klasy używane tylko wewnątrz.
    Hexagonal architecture / Ports & Adapters
    Jest to prostsze niż dodawanie słówka public. Użyj CQRS kiedy potrzebujesz czegoś na zewnątrz.
+</pre>
+</details>
+
+### Mateusz Chrzonstowski: Moje rozumienie DDD na przykładzie bajki o 3 świnkach<a name="chrzonstowski_3pigs"></a>
+
+Kompleksowy przykład tworzenia aplikacji wykorzystujący Event Storming i DDD.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/hyh3T5O98ik?start=240" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+Oglądałem [tę wersję](https://www.youtube.com/watch?v=LVN7tof5LDg), ale ma wyłączone odtwarzanie na innych stronach.
+
+<details>
+    <summary>Moje notatki z prezentacji</summary>
+<pre>
+Moje rozumienie DDD na przykładzie bajki o 3 świnkach - Mateusz Chrzonstowski
+---
+
+Evenstorming
+- Big Picture
+    - ogólny przepływ pieniędzy - skąd płyna w firmie
+- Process-Level
+    - Jakie mamy bounded-contexty?
+        - Domena - przestrzeń problemu
+        - Bounded-context - przestrzeń rozwiążania tego problemu
+    - pozwala nam zidentyfikować bounded-contexty.
+- Design-Level
+    - Przez ten bounded-context przechodzimy z analitykami, któzy najbardziej znają się na tym obszarze
+      i szukamu klocków z których będziemy budować naszą aplikację.
+      Złota zasada:
+      zdarzenia (czasowniki), a nie struktury danych (rzeczowniki)
+      Rozróżnienie między komendami (zmieniają stan systemu), a widokami.
+      Tabele/strukrury danych do wyświetlania i zmieniania stanu mogą być różne.
+
+---
+
+DDD Taktyczne
+Najważniejszym klockiem  z którego buduję się aplikacje jest agregat.
+Agregat agreguje (hermetyzuje) REGUŁY BIZNESOWE.
+REGUŁY przy jednej tranzakcji bazodanowej powinny być spójne.
+
+Agregat ma tożsamość wynikająca z identyfikatora.
+Np. PRODUKT, mimo że możę być w różnych kontekstach np.
+- produkt w koszyku
+- produkt na liście ofert
+- produkt w zamówieniu.
+
+Domain Repository
+- służy tylko i wyłączeni do tego, by agregat zapisywać i odczytywać.
+
+Encja
+- pomocniczo: np. gdy agreagat to FAKTURA, to POZYCJE NA FAKTURZE byłyby encjami (zarządzane wewnątrz agregatu)
+  czyli podlegla wobec agregatu.
+
+Złota zasada:
+Agregat i encja hermetyzują reguły i nie wystawiają pól i get'eró i set'erów.
+Na zewnątrz wystawiamy tylko metody biznesowe: KOMENDY z eventStormingu.
+np. agregat to KONTO_W_BANKU. KOMENDA to "przelej na inne konto". Saldo nie jest udostępniane na zewnątrz.
+Jest sprawdzane przy wykonaniu komendy wewnątrz agreagtau.
+
+Co jakiś czas zapisujemy to saldo (stan pół w agregacie) w bazie danych.
+Możemy to zrobić wykorzystując Snapshoty (W przykładzie "EntitySnapshot").
+Snapshot zawiera same get'ery, w kązdej chwili możemy go wyciąnać z agregatu i zapisać.
+
+Wspomniany Event SOURCING - zarządzanie domena przy pomocy zdarzeń (nierozwinięty w przykładzie):
+- DomainEvent
+- Domain
+
+====
+Clean architecture
+
+Polecany artykuł: https://herbertograca.com/2017/11/16/explicit-architecture-01-ddd-hexagonal-onion-clean-cqrs-how-i-put-it-all-together/
+[Grafika z artykułu]
+
+Domain Model (Domena / model domenowy)
+- centrum, jądro systemu
+- niezmienny, "prawa fizyki"
+
+Domain Services
+- obudowa domain model opisuje w jaki sposób chcemy wykorzystać tę "fizykę", domenę
+- np. wystawiamy: jeśli ktoś doda produkt do koszyka to powiadom konsultanta
+
+  Aplikacj wystawia taki port. A on jest potem adoptowany: mamy serię adpterów
+    - adapter - sposób implementacji
+      Na etapie definiowania adapterów dopiero decydujemy, że np.:
+    - chcemy coś zapisywać w bazie relacyjnej,
+    - chcemy te powiadomienia wysyłąć mailem/sms
+
+Dwa rodzaje adapterów:
+1) Primary Adapters (adaptery sterujące)
+    - sterują naszą aplikacją, wchodzą do naszego systemu
+    - sposób w jaki użytkownik wykonuje komendy
+    - np. API, kolejki, GUI
+
+2) Secondary adapters (adptery sterowane)
+    - nasza aplikacja je woła, aby coś zapisać, "przepchnąć dalej" jakąs informację
+
+===
+Jak czystą architekturę przenieść na kod?
+
+W Javie za pomocą np. modułów mavenowych. 3 główne:
+- domain
+  -> model, DDD taktyczne
+- app
+  -> usecasy, scenariusze, stories z JIRA'y, implementowane przy pomocy np. komend
+- adapters
+  -> decyzja o implementacji
+
+"Domain" może mieć:
+- pakiet "model"
+- testy w groovie
+- powinno być bardzo dużo testów jednostkowych, bo domena dobrze testuje się jednostkowo.
+
+"App" (aplikacja)
+- scenariusze użytkownika
+- każdy moduł może być w innym języku w obrępie JVM, tutaj np. kotlin
+  (dlaczego: bo nadaje się dobrze do funkcji pomocniczych, przeciążania operatorów itp., możemy omijać spacje,
+  a jednocześniej jest bliżej Javy niż Groovy)
+- testy jednostkowe sprawdzają interakcje
+    - w Java
+    - wykonując komendę w jakimś serwisie (w obrępie aplikacji nazywanym często "Command Handler")
+      np. chcę na końcy wykonania komendy zapisać coś w repozytorium domenowym.
+        - sprawdzam interakcję: na komendę coś się wczytuje, coś się dzieje, coś się zapisuje,
+          czyli "Przepływ". Tu mogę używać mocków, implementacji pisanych w pamięci.
+          ale dalej testy jednostkowe sprawdzające przepływ.
+
+"Adapters"
+- najbogatsza część systemu
+- część adapterów wystawiły domena
+    - w przykładzie: pakiet "model" jest w domenie i implementacja tych portów napisana w adapterach w tym samym pakiecie ("io.github.mat3e.model")
+- część portów wystawiła aplikacja
+    - w przykładzie "io.github.mat3e.app"
+        - tutaj będą szczegółowe implementacje/adptery dot. portów wystawionych przez aplikację
+- są też wejściowe/driving
+    - w przykładzie "io.github.mat3e.in"
+        - io.github.mat3e.in.console
+        - io.github.mat3e.in.rest
+- adaptery wyjściowe:
+    - w przykładzie również logowanie do konsoli, "wypluwanie" tekstów:
+        - "io.github.mat3e.out.logging"
+        - nie wynikają bezpośrednio ani z domeny ani z aplikacji
+
+Dodatkowy moduł (bo lubię): "monolith", żeby spiąć kilka adapterów.
+
+"Domenę", "Adaptery" i "aplikację" trzeba traktować jak jedną całość.
+Np. "Trzy świnki domena", "Trzy świnki adaptery", "Trzy świnki aplikacja".
+Gdy bardziej złożona aplikacja opowiadające trzy rożne bajki, każda bajka ma swój komplet, np. dodatkowo powielone:
+"Czerwony kapturek domena" "Czerwony kapturek adaptery", "Czerwony kapturek aplikacja" itd.
+Dodatkowo moduł "Shared"
+- pomocniczo do pisania domeny (DDD taktyczne, klocki do budowania)
+  Moduł "Monolith"
+  Moduł "Root"
+- Tylko po to: zbiornik, któy odpala testy we wszystkich modułach. Wirtualny zbieracz projektów.
+
+Pamiętać: Każdy Bounded Context (przestrzeń rozwiązań) ma swój moduł mavenowych "Domain", "App", "Adapter".
+"Shared" jest współdzielone między wszystkimi domenami.
+
+Moduł "Root" jest bezpośrednim rodzicem "Shared" i "Domain" i ma świadomość istnienia modułów pozostałych (Domain, Adapters, App, Monolith).
+Rodzicem dla Adapter, App i Monolith jest Spring.
+App nie musi wiedzień o Springu - nie jest do App dodany jako zależność, ale jako rodzic. Po to by zarządzał zależnościami (Spring Boot do zarządzania testami).
+
+Kto wie o czym:
+----<>[Adapters]----dependency---<>[Monolith]
+/        < >
+[Shared]----<>[Domain]          |
+\         |
+-----<>[App]
+[Root]
+
+
+"Domain" wie tylko o "Shared".
+"Aplikacja" wie tylko o "Domain"
+"Adapters" wiedzą zarówno o "Domain" jak i "App".
+"Monolith" zbiera tylko i wyłącznie "Adapters"
+
+Jeżeli mielibyśmy dodatkowy zestaw "Czerwonego kapturka" to tylko jego adaptery byłyby powiązane z "Monolith" obecnego diagramu.
+(Mój przypis: a one same miały by powiązanie z Shared).
+
+Zależności:
+"Domain":
+-> Groovy
+"App":
+-> Mockito,
+-> Spring Boot,
+-> Kotlin
+"Adapters":
+-> RESTfull API + HATEOS
+-> Flyway
+-> Spring
+-> Mockito
+-> JDBC
+-> H2
+	
+===
+Biznesowo
+
+Załozenia:
+- Budowanie ze słomy, z drewna, z cegieł
+- Po zdmuchnięciu domu: ucieczka do sąsiedniego.
+- Rezygnacja wilka po próbach zdmuchnięcia domu z cegieł.
+- Wyciąganie wniosków przez świnki, nauka
+- Przemilczane:
+    - Wspinanie się wilka przez komin
+    - Zjadanie świnek
+    - Opowiadanie o mamie świnek
+    - Imprezowanie świnek po skończonej pracy
+
+---
+
+USER STORY
+
+- co system powinien "wystawić na świat"
+- Jako użytkownik chcę poznać bajkę o trzech świnkach, żeby móc ją opowiedzień innym. (Jedna historyjka: słabe).
+
+To są komendy jakie nasz system może wykonywać. Idą przez warstwę aplikacji do warstwy "fizyki gry" ("Domain").
+W tym przypadku komendy to:
+- Jako świnka, chcę zbudować dom, dostosowany do moich potrzeb.
+    - Dokumentowanie i utrwalanie informacji.
+- Jako wilk chcę zdmuchnąć dom, żeby móc złapać świnkę.
+    - Rejestr - z tym domem już próbowano
+
+
+Jak to połączyć(rzeczy techniczne i biznes)?
+
+---
+AGREGAT
+
+Co jest agregatem?
+Uwaga: nie posługiwać się strukturami danych, a zdarzeniami.
+Moment by wykorzystać Event Storming, by wiedzień jakie mamy w systemie zdarzenia.
+Może wyglądać tak:
+
+BIG PICTURE event storming:
+- house built
+- blew on the house
+- house destroyed             - house left behind
+  - escaped
+  - house changed
+  - learnt from the mistakes
+
+To jest główny proces. Niektóre kroki będą się powtarzać, ale to już kwestia aplikacji.
+Process-level event storming nie jest tu potrzebny, bo mamy tylko jedną domenę (bounded context) - tylko bajka o 3 świnkach.
+Cały Big Picture jest process-level'em w tym przypadku.
+
+Design level może wyglądać tak:
+
+Pig:
+{build house} /house built/
+
+Wolf:
+{blow down} [House] /house destroyed/
+/house left behind/
+
+Pig:
+{escaped}
+
+Pig:
+{let in} [House] /house changed/
+
+Pig:
+{share knowledge} /learnt from the mistakes/
+
+
+Komendy: { ... }
+Widoki:
+Zdarzenia: / ... /
+
+Wilk (aktor) korzysta z naszego systemu by zdmuchnąć dom.
+Z tego wynika jednoznacznie, że [House] powinien sprawdzić, czy może zostać zniszczony, czy nie.
+Gdy świnka wchodzi ({let in}) do domu, to [House] powinien sprawdzić, czy może wejść (czy już są 3 świnki i nie może).
+
+Z tego event stormingu wynika, że dom [House] najlepiej sprawdzi się jako agregat,
+czyli coś co agreguje nasze reguły biznesowe.
+
+Dalej mamy dwa fragmenty gdzie mamy tylko komendę i wynikające z niej zdarzenie.
+Jeżeli na sesji event stormingu większość naszego systemu tak wygląda to budujemy zwykłęgo CRUDa.
+Nie potrzebujemy wtedy agregatu i DDD. (chyba ze do architektury)
+
+---
+Jak zbudować dom?
+
+Mamy agregat, jak go zbudować?
+
+Założenie w DDD:
+Jeżeli agregat ma mało właściwości, można budować go przez konstruktor.
+Jeśli ma dużo konfigurowalnych właściwości (np. specyfikacja, polityka): wykorzystujemy fabrykę.
+
+Jak stworzyć wilka?
+Jako serwis. Dlaczego?
+Wilk tylko robi różne rzeczy dmucha w dom. I nie jest zapisywany.
+Rzecz, któa woła komendy, a nie jest zapisywana, powinna być klockiem "Domain Service".
+Czyli serwis któy w metodach, polach może konsumować agregaty, encje domenowe lub Value Objecty (jakieś rzeczy z domeny).
+Wilk wewnątrz metod woła tylko metody na agregacie (domie).
+
+public class BigBadWolfService {
+private final DomainEventPublisher eventPublisher;
+
+	   BigBadWolfService(final DomainEventPublisher eventPublisher) {
+	       this.eventPublisher = eventPublisher;
+	   }
+	   
+	   public void blowDown(final House target) {
+	       try {
+		       target.handleHurricane();
+			} catch (House.IdenstructibeHouseException e) {
+			    retryBlowing(target);
+		    }
+		}
+		
+		private void retryBlowing(final House target) {
+		    try {
+			    target.handelHurricane();
+			} catch (House.IdenstructibeHouseException e) {
+			    eventPublisher.publish{
+				    new WolfResignedFromAttacking(target.getSnapshot().id())
+				);
+			}
+		}
+	}
+
+Kod jest zrozumiały nawet dla biznesu.
+I o to chodzi: by kod wynikowy bardzo pasował do języka w jakim rozmawia biznes.
+
+====
+SPECYFIKACJA
+
+Istnieje w DDD coś takiego jak Specyfikacja.
+Tutaj mam to zaprezentowane podwójnie:
+1) Specyfikazja z Domain Driven Design
+2) tzw. specyfikacja: test napisany w języku Groovie.
+   Każdy przypadek testowy nosi nazwę: Specyfikacja
+
+@Unroll('house from #inputMaterial vs. #resource')
+def 'should fail for material different than in specification'() {
+given:
+def house = houseFrom inputMaterial
+
+	expect:
+	!new ConstructionSpecification(resource).isSatisfiedBy(house)
+	
+	where:
+	resource | inputMaterial
+	STRAW    | BRICKS
+	WOOD     | STRAW
+	STRAW    | WOOD
+}
+
+Po co mi te specyfikacje? To tak naprawdę IF na sterydach.
+Coś co pozwala mi odpowidzieć na pytanie, w tym przypadku: Z czego dom jest zrobiony?
+Powyższy przypdek można by zrobić jednym prostym IF'em, ale tutaj chcemy mieć specyfikację.
+Po to, by mieć dobrą konfigurowalność. IF na sterydach: obiektowy.
+Możemy robić AND i OR na specyfikacjach.
+
+===
+OVERENGINEERING?
+
+Możliwość dokonywania dużych zmian np.:
+WolfOnSteroidsSpecification {
+boolean isSatisfiedBy(Wolf wolf) {
+return wolf.powerLevel() > 9000;
+}
+}
+
+===
+"Aspect Oriented Programming" Mariusz Gil
+https://www.bettersoftwaredesign.pl/episodes/7
+
+Zazwyczaj działamy w systemie tak jak opisano wczesniej:
+
+Devices              |   Controllers |   Use cases |   Entitites
+Web                  |   Presenters  |             |
+UI                  -+-> Gateways   -+->          -+->
+External Interfaces  |               |             |
+DB                   |               |             |
+
+Ale zdarzają się takie rzeczy jak:
+- Security
+- Logowanie w konsoli
+- Tranzakcje bazodanowe
+- itd.
+
+Pajączki na styku różnych warstw.
+
+Takie tematy: programowanie aspektowe:
+
+@Before("handling()")
+void logBeforeHandling(JoinPoint jp) {
+if (logger.isInfoEnabled()) {
+var command = jp.getArgs()[0];
+if (command instanceof BuildHuse buildCommand) {
+switch (buildCommand.getOwner()) {
+case VERY_LAZY -> logger.info("The first little pig was very lazy.");
+case LAZY -> logger.info("The second little pig was a bit ambitious.");
+case NOT_LAZY -> logger.info("The third little pig was ready for hard work.");
+}
+}
+}
+}
+
+===
+40:00
+LIVE
+
+Jak działa aplikacja
+
+Jakie mamy komendy.
+>BuildHouse
+>UpdateCommand
+>BlowDown
+>Enter
+>ShareKnowledge
+
+(...)
+52:00
+Wzorzec strategii wykorzystany w BuildingPolicy. Gotowa na rozszerzanie.
+Pozwala np. na dodanie informacji z jakich narzędzi korzystały świnki podczas budowy domu z różnych materiałów.
+
+===
+Pytania:
+1) Co robić, gdy baza danych już istnieje?
+   > Zależy. Można np. tworzyć własną bazę (np. w pamięci, H2) i później perzystować. Albo mapować na starą bazę.
+
+2) Czym jest serwis domenowy
+   > Serwis domenowy a serwis aplikacyjny.
+   CommandHandler z przykłady to był serwis aplikacji:
+    - ma dostęp do repozytoriów, woła je często.
+    - może wołać serwis domenowy
+      Serwis domenowy
+    - Typowy przykład: kalkulator który bierzez jakieś rzeczy z agrgatów i przelicza. Tutaj pasował Wilk.
+    - a'la agregat, coś ważnego w systemie, co nie powinno być utrwalane.
+    - np. skomplikowany proces liczenia.
+
+3) Biznes
+   > Event Storming powinniśmy robić z osobami, które wiedzą gdzie w naszej organizacji jest pieniądz.
+
 </pre>
 </details>
 
@@ -1080,7 +1515,7 @@ Czyli CFS + FIFO. Ponieważ chcemy, żeby nasze batche jak najszybciej się poli
 
 ### Bottega<a name="bottega"></a>
 
-Firma szkoleniowa skupiająca najlepszych praktyków programowania w Polsce udostępnia za darmo wartościowe materiały. 
+Firma szkoleniowa skupiająca najlepszych (znanych mi) praktyków programowania w Polsce udostępnia za darmo wartościowe materiały. 
 
 [bottega.com.pl/materialy-Java](https://bottega.com.pl/materialy-Java)
 
