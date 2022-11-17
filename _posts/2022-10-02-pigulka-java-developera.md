@@ -6,7 +6,7 @@ categories: [Java]
 
 > Artykuł aktualizowany (ostatnio 15.11.2022)
 
-Materiałów sieci jest mnóstwo, tutaj wybrałem te, które osobiście uważam najbardziej merytoryczne i przydatne.
+Materiałów sieci jest mnóstwo, tutaj wybrałem te, które osobiście uważam za aktualne i najbardziej merytoryczne i przydatne.
 Do części załączam własne notatki i streszczenia.
 
 ## Table of contents
